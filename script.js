@@ -1,108 +1,116 @@
 const car = document.getElementById("car");
 const game = document.getElementById("game");
-
 const scoreEl = document.getElementById("score");
 const highScoreEl = document.getElementById("highScore");
-
-const engineSound = document.getElementById("engineSound");
-const crashSound = document.getElementById("crashSound");
-const bgMusic = document.getElementById("bgMusic");
+const gameOverScreen = document.getElementById("gameOverScreen");
+const finalScore = document.getElementById("finalScore");
 
 let carX = 130;
+let speed = 3;
 let score = 0;
-let speed = 4;
 let gameOver = false;
 
 let highScore = localStorage.getItem("highScore") || 0;
 highScoreEl.innerText = "High: " + highScore;
 
-/* Start sound on first click */
-document.body.addEventListener("click", () => {
-  engineSound.play();
-  bgMusic.play();
-}, { once: true });
+/* 🎮 KEYBOARD CONTROLS */
+let keys = {};
+document.addEventListener("keydown", e => keys[e.key] = true);
+document.addEventListener("keyup", e => keys[e.key] = false);
 
-/* Keyboard */
-document.addEventListener("keydown", e => {
-  if (e.key === "ArrowLeft" && carX > 0) carX -= 25;
-  if (e.key === "ArrowRight" && carX < 260) carX += 25;
-  car.style.left = carX + "px";
-});
+/* 📱 TOUCH CONTROLS */
+game.addEventListener("touchmove", (e) => {
+  const touch = e.touches[0];
+  const rect = game.getBoundingClientRect();
 
-/* Touch */
-game.addEventListener("touchmove", e => {
-  let x = e.touches[0].clientX - game.offsetLeft - 20;
+  let x = touch.clientX - rect.left - 20;
   if (x < 0) x = 0;
   if (x > 260) x = 260;
+
   carX = x;
-  car.style.left = carX + "px";
 });
 
-/* Enemy */
+/* 🚗 GAME LOOP */
+function gameLoop() {
+  if (gameOver) return;
+
+  if (keys["ArrowLeft"] && carX > 0) carX -= 5;
+  if (keys["ArrowRight"] && carX < 260) carX += 5;
+
+  car.style.left = carX + "px";
+
+  moveEnemies();
+  checkCollision();
+
+  score++;
+  scoreEl.innerText = score;
+
+  if (score % 200 === 0) speed += 0.5;
+
+  requestAnimationFrame(gameLoop);
+}
+
+/* 🚧 ENEMIES */
 function spawnEnemy() {
   if (gameOver) return;
 
-  const enemy = document.createElement("img");
-  enemy.src = "assets/enemy.png";
+  const enemy = document.createElement("div");
   enemy.classList.add("enemy");
 
   enemy.style.left = Math.floor(Math.random() * 6) * 50 + "px";
+  enemy.style.top = "-100px";
+
   game.appendChild(enemy);
+}
 
-  let top = -100;
+function moveEnemies() {
+  const enemies = document.querySelectorAll(".enemy");
 
-  const move = setInterval(() => {
-    if (gameOver) {
-      clearInterval(move);
-      return;
-    }
-
+  enemies.forEach(enemy => {
+    let top = parseInt(enemy.style.top);
     top += speed;
     enemy.style.top = top + "px";
 
-    if (
-      top > 400 &&
-      enemy.offsetLeft < carX + 40 &&
-      enemy.offsetLeft + 40 > carX
-    ) {
-      crashSound.play();
-      endGame();
-    }
-
-    if (top > 500) {
-      enemy.remove();
-      clearInterval(move);
-    }
-  }, 30);
+    if (top > 500) enemy.remove();
+  });
 }
 
-/* Game loop */
-setInterval(() => {
-  if (!gameOver) {
-    spawnEnemy();
-    score++;
-    scoreEl.innerText = score;
+/* 💥 COLLISION */
+function checkCollision() {
+  const enemies = document.querySelectorAll(".enemy");
 
-    if (score % 200 === 0) speed += 0.5;
-  }
-}, 1000);
+  enemies.forEach(enemy => {
+    const e = enemy.getBoundingClientRect();
+    const c = car.getBoundingClientRect();
 
-/* End game */
+    if (
+      e.left < c.right &&
+      e.right > c.left &&
+      e.top < c.bottom &&
+      e.bottom > c.top
+    ) {
+      endGame();
+    }
+  });
+}
+
+/* 🧠 END GAME */
 function endGame() {
   gameOver = true;
-
-  engineSound.pause();
-  bgMusic.pause();
 
   if (score > highScore) {
     localStorage.setItem("highScore", score);
   }
 
-  document.getElementById("finalScore").innerText = "Score: " + score;
-  document.getElementById("gameOverScreen").classList.remove("hidden");
+  finalScore.innerText = "Score: " + score;
+  gameOverScreen.classList.remove("hidden");
 }
 
-/* Restart */
+/* 🔁 RESTART */
 function restartGame() {
   location.reload();
 }
+
+/* Start systems */
+setInterval(spawnEnemy, 1200);
+gameLoop();
