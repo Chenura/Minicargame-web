@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Car Game</title>
+  <title>Car Runner Mobile</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -10,15 +10,23 @@
 <div class="game-container">
 
   <div id="game">
-    <div id="road"></div>
-    <img id="car" src="assets/player.png">
+
+    <!-- Road lines -->
+    <div class="road-line" style="left: 95px;"></div>
+    <div class="road-line" style="left: 195px;"></div>
+
+    <!-- Player -->
+    <div id="car"></div>
+
   </div>
 
+  <!-- HUD -->
   <div class="hud">
     <span id="score">0</span>
-    <span id="highScore">High: 0</span>
+    <span id="highScore">0</span>
   </div>
 
+  <!-- Game Over Screen -->
   <div id="gameOverScreen" class="hidden">
     <h2>💥 Game Over</h2>
     <p id="finalScore"></p>
@@ -26,10 +34,6 @@
   </div>
 
 </div>
-
-<audio id="engineSound" src="assets/engine.mp3" loop></audio>
-<audio id="crashSound" src="assets/crash.mp3"></audio>
-<audio id="bgMusic" src="assets/music.mp3" loop></audio>
 
 <script src="script.js"></script>
 </body>
